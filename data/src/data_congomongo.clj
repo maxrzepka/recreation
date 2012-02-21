@@ -12,7 +12,6 @@
 (defn init-data
   "Create a collection persons and insert person as  (no join in mongodb)"
   []
-  (m/create-collection! :persons)
   (m/mass-insert! :persons person-follows))
 
 (defn simple-query []
