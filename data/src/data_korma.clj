@@ -1,11 +1,55 @@
 (ns data-korma
   (require [data-core :as c]
+           [clojure.java.jdbc :as sql]
            [korma.db :as kd]
            [korma.core :as k]))
 
 ;;  "Connect to a database with the following tables :
 ;; create table person (name varchar(30) , gender varchar(2) , age int(11));
 ;;  create table follow (follower varchar(30) not null, followed varchar(30) not null);
+  
+(def db {:classname "com.mysql.jdbc.Driver"
+         :subprotocol "mysql"
+         :subname "//localhost:3306/test"
+         :user "test"
+         :password "test"})
+
+(defn create-wishlist []
+  (sql/with-connection db
+    (sql/create-table :wishlist
+      [:code :varchar "PRIMARY KEY"]
+      [:title :varchar "NOT NULL"]
+      [:created_at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"])))
+
+(defn create-wish []
+  (sql/with-connection db
+    (sql/create-table :wish
+      [:id :serial "PRIMARY KEY"]
+      [:description :varchar "NOT NULL"]
+      [:created_at :timestamp "NOT NULL" "DEFAULT CURRENT_TIMESTAMP"]
+      [:url :varchar]
+      [:wishlist_code :varchar]
+      ["constraint fk_wish_wishlist foreign key(wishlist_code) 
+        references wishlist(code) on delete cascade"])))
+
+(defn drop-tables []
+  (sql/with-connection db
+    (sql/drop-table :wish)
+    (sql/drop-table :wishlist)))
+
+(k/defentity wish)
+(k/defentity wishlist
+  (k/pk :code)
+  (k/has-many wish {:fk "wishlist_code"}))
+
+(defn read-wishlist [code]
+  "Selects one wishlist row and all corresponding wish rows for a given code."
+  (first
+    (k/select wishlist (k/fields :id :url :description)
+      (k/with wish 
+        (k/fields :code :title)
+        (k/order :id :asc))
+      (k/where {:code code}))))
 
 
 ;; Database
@@ -46,4 +90,12 @@
             (k/aggregate (count 1) :cnt :follower)))
 
 
+(comment 
+(-> (select* models/album)
+  (fields [:album.id :album_id]
+          :name
+          :lots-of-other-fields)
+  (join models/album-artist (= :album.id :album_artist.album))
+  (join models/artist (= :artist.id :album_artist.artist)))
+) 
 

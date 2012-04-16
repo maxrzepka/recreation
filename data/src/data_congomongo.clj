@@ -1,7 +1,7 @@
 (ns data-congomongo
-  (use data-core
+  (:use data-core
        [somnium.congomongo.config :only [*mongo-config*]])
-  (require [somnium.congomongo :as m]))
+  (:require [somnium.congomongo :as m]))
 
 ;;  mongodb daemon should run  
 ;; 
