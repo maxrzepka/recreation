@@ -39,6 +39,7 @@
     (ca/??- q)))
 
 
+;;examples from https://github.com/nathanmarz/cascalog-conj/blob/master/src/clj/cascalog/conj/tunisia.clj
 
 ;;make dynamic buckets 
 (defn build-bucketize [buckets]
