@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Recreation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+
+    <style type="text/css">
+      body {
+        padding-top: 10px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="container">
+     <div class="page-header">
+         <h2>Enlive By Example</h2>
+     </div>
+      <div class="row">
+        <div class="span2">
+          <div class="well sidebar-nav">
+            <ul id="navexamples" class="nav nav-list">
+              <li class="active"><a href="#">Latest</a></li>
+              <li><a href="#">Clojure</a></li>
+           </ul>
+          </div><!--/.well -->
+        </div>
+        <div class="span5">
+            <form method="post" id="" action="/">
+            <label class="control-label">Selector</label>
+            <input type="text" name="selector" id="i_selector" class="span3"/>
+            <label class="control-label">Transform</label>
+            <input type="text" name="transform" id="i_transform" class="span3"/>
+
+            <label class="control-label" for="source">HMTL Snippet
+            <textarea class="input-xlarge" id="i_source" name="source" rows="5" cols="10">
+            </textarea>
+            </label>
+            <button type="submit" class="btn">Select</button>
+            </form>
+	    </div>
+        <div class="span5">
+            <pre clas="prettyprint" id="l_selector">[:a]</pre>
+            <pre class="prettyprint" id="l_selection">
+                &lt;div class="row"&gt;
+                  &lt;div class="span4"&gt;...&lt;/div&gt;
+                  &lt;div class="span4 offset4"&gt;...&lt;/div&gt;
+                &lt;/div&gt;
+            </pre>
+        </div><!--/span-->
+      </div><!--/row-->
+
+    </div><!--/.fluid-container-->
+
+  </body>
+</html>
