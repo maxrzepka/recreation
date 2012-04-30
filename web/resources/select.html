@@ -44,20 +44,22 @@
         </div>
         <div class="span5">
             <form method="post" id="" action="/">
-            <label class="control-label">Selector</label>
-            <input type="text" name="selector" id="i_selector" class="span3"/>
-            <label class="control-label">Transform</label>
-            <input type="text" name="transform" id="i_transform" class="span3"/>
+                <div id="i_error" class="well alert-error">Error here</div>
+                <label class="control-label">Selector</label>
+                <input type="text" name="selector" id="i_selector" class="span3"/>
+                <label class="control-label">Transform</label>
+                <input type="text" name="transform" id="i_transform" class="span3"/>
 
-            <label class="control-label" for="source">HMTL Snippet
-            <textarea class="input-xlarge" id="i_source" name="source" rows="5" cols="10">
-            </textarea>
-            </label>
-            <button type="submit" class="btn">Select</button>
+                <label class="control-label" for="source">HMTL Snippet
+                    <textarea class="input-xlarge" id="i_source" name="source" rows="5" cols="10">
+                    </textarea>
+                </label>
+                <button type="submit" class="btn">Select</button>
             </form>
 	    </div>
         <div class="span5">
             <pre clas="prettyprint" id="l_selector">[:a]</pre>
+            <pre clas="prettyprint" id="l_transform">[:a]</pre>
             <pre class="prettyprint" id="l_selection">
                 &lt;div class="row"&gt;
                   &lt;div class="span4"&gt;...&lt;/div&gt;
@@ -66,7 +68,9 @@
             </pre>
         </div><!--/span-->
       </div><!--/row-->
-
+      <div class="row">
+          <div class="span2"></div>
+      </div>
     </div><!--/.fluid-container-->
 
   </body>

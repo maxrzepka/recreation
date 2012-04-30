@@ -13,14 +13,33 @@
 ;;TODO how to handle compile error
 ;;TODO how to inject full namespace in enlive function :
 ;;         content --> net.cgrand.enlive-html/content
-(defn str->code
+
+(def enlive-functions (set (map first (ns-publics 'net.cgrand.enlive-html))))
+
+;; from dotify https://github.com/flatland/clojail/blob/master/src/clojail/core.clj
+(defn- fullify
+  "Replace all enlive symbols with full namespace"
+  [form]
+  (if-not (coll? form)
+    form
+    (let [recurse #(clojure.walk/walk fullify identity %)]
+      (if-not (seq? form)
+        (recurse form)
+        (let [f (first form)]
+          (if (enlive-functions f)
+            (cons (symbol (str "net.cgrand.enlive-html/" (name f)))
+                  (recurse (rest form)))
+            (case f quote form (recurse form)))
+          )))))
+
+
+(defn str->clj
   [s]
   (if (string? s)
-    (try (load-string s)
-         (catch Throwable t {:message "" :error (.getMessage t)}))
+    (eval `~(fullify (read-string s)))
     s))
 
-(defn code->str [c]
+(defn clj->str [c]
   (cond
     (string? c) c
     (nil? c) ""
@@ -36,7 +55,7 @@
   [selector text]
 ;;  (println "select-nodes--> " selector)
   (nodes->str (h/select (h/html-snippet text)
-                       (str->code selector))))
+                       (str->clj selector))))
 
 ;;
 ;; How to load enlive functions
@@ -45,19 +64,22 @@
   [selector trans text]
   (nodes->str
    (h/transform (h/html-snippet text)
-                (str->code selector)
-                (str->code trans))))
+                (str->clj selector)
+                (str->clj trans))))
 ;;
 (def examples
   [{:id "simple" :title "Simple" :selector [:a]
     :source "<span><a>llll</a></span>"}
+   {:id "content" :title "Content" :selector [:a] :transform "(content \"hello\")"
+    :source "<span><a>llll</a></span>"}
    {:id "fragment" :title "Fragment" :selector "{[:h1] [:p]}"
     :source "<div><h1>title</h1><h2>Sub title</h2><p>some text</p></div><h1>Another Title</h1>"}
    {:id "tagattr" :title "Tag/Attr"
-    :selector  "[[:a (net.cgrand.enlive-html/attr= :href \"/\")]]"
+    :selector  "[[:a (attr= :href \"/\")]]"
     :source "<div>><a>ll1</a></li><li><a href=\"/\">index</a></div>"}
-   ]
-  )
+   {:id "attrstart" :title "attr-starts"
+    :selector  "[[:a (attr-starts :href \"/\")]]"
+    :source "<div><a>ll1</a></li><li><a href=\"/\">index</a></div>"}])
 
 ;; misc middleware
 (defn haz? [coll element] (boolean (some (conj #{} element) coll)))
@@ -122,23 +144,34 @@
   [:a] (h/do-> (h/set-attr :href (str "/" id))
                (h/content title)))
 
-(mydeftemplate index "select.html" [{:keys [source selector selection]}]
+(mydeftemplate index "select.html" [{:keys [error source transform selector selection]}]
                [:#navexamples] (h/content (mapcat nav-item examples))
-               [:#i_selector] (h/set-attr :value (code->str selector))
+               [:#i_selector] (h/set-attr :value (clj->str selector))
+               [:#i_error] (if error (h/content error) (h/substitute ""))
+               [:#i_transform] (h/set-attr :value transform)
                [:#i_source] (h/content source)
-               [:#l_selector] (h/content (code->str selector))
+               [:#l_transform] (h/content transform)
+               [:#l_selector] (h/content (clj->str selector))
                [:#l_selection] (h/content selection)
                )
 
 (defn find-example [id]
   (first (filter #(= id (:id %)) examples)))
 
-(defn append-selection [{:keys [selector transform source] :as params}]
-  (assoc params
-    :selection
-    (if transform
-      (transform-nodes selector transform source)
-      (select-nodes selector source))))
+;;
+(defn append-selection
+  [{:keys [selector transform source] :as params}]
+  (try (let [selection (if (seq transform)
+                 (transform-nodes selector transform source)
+                 (select-nodes selector source))]
+         (assoc params :selection selection))
+       (catch Throwable t (assoc params :error (.getMessage t)))))
+
+(comment
+  (let [result (if (seq transform)
+                 (transform-nodes selector transform source)
+                 (select-nodes selector source)) ]
+    (if (map? result) (merge params result) (assoc params :selection result))))
 
 (defn process-selection [{params :params :as req}]
 ;;  (println "process-selection--> " (pr-str params))
