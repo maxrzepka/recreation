@@ -6,6 +6,7 @@
         [ring.middleware.file :only [wrap-file]]
         [ring.middleware.stacktrace :only [wrap-stacktrace ]]
         [ring.util.response :only [response file-response redirect]]
+        [clojure.walk :only [walk]]
         [net.cgrand.moustache :only [app delegate]])
   (:require [net.cgrand.enlive-html :as h]))
 
@@ -16,13 +17,13 @@
 
 (def enlive-functions (set (map first (ns-publics 'net.cgrand.enlive-html))))
 
-;; from dotify https://github.com/flatland/clojail/blob/master/src/clojail/core.clj
+;;adapted from dotify of https://github.com/flatland/clojail/blob/master/src/clojail/core.clj
 (defn- fullify
   "Replace all enlive symbols with full namespace"
   [form]
   (if-not (coll? form)
     form
-    (let [recurse #(clojure.walk/walk fullify identity %)]
+    (let [recurse #(walk fullify identity %)]
       (if-not (seq? form)
         (recurse form)
         (let [f (first form)]
@@ -46,9 +47,8 @@
     :else (pr-str c)))
 
 (defn nodes->str [nodes]
-  (cond
-    (string? nodes) nodes
-    :else (apply str (h/emit* (h/flatten-nodes-coll nodes)))))
+  (if (string? nodes) nodes
+      (apply str (h/emit* (h/flatten-nodes-coll nodes)))))
 
 (defn select-nodes
   ""
