@@ -21,20 +21,55 @@
             .sidebar-nav {
             padding: 9px 0;
             }
+            .hidden {
+              display: none;
+            }
+            .table-hover tbody tr:hover td,
+            .table-hover tbody tr:hover th {
+              background-color: #f9f9f9;
+            }
         </style>
 
     </head>
 
     <body>
-        <div class="container-fluid">
-            <div id="content" class="row-fluid">
+        <div class="container-fluid" id="content">
+            <a class="btn" onclick="showFirst()">Show First</a>
+            <a class="btn" onclick="goto(1234123)">GoTo</a>
+            <div id="-711241968" class="row-fluid hidden">
+                <div class="span*">
+                    <div class="btn-toolbar">
+                        <b>Aggregate</b>
+                        <div class="btn-group">
+                            <a onclick="goto(this,1234123)" class="btn">Type</a>
+                            <a onclick="goto(this,1234123)" class="btn">Region</a>
+                            <a onclick="goto(this,1234123)" class="btn">Country</a>
+                        </div>
+                    </div>
+                    <div class="btn-toolbar">
+                        <b>Filter</b>
+                        <div class="btn-group">
+                            <a class="dropdown-toggle btn">Type</a>
+                            <a class="dropdown-toggle btn">Region</a>
+                            <a class="dropdown-toggle btn">Country</a>
+                        </div>
+                    </div>
+                    <table class="table table-bordered ">
+                        <thead>
+                            <tr><th>Acct #</th><th>Balance</th><th>Commission</th></tr>
+                        </thead>
+                        <tbody><tr><td>10</td><td>45428</td><td>50.36</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="1234123" class="row-fluid hidden">
                 <div class="span*">
                     <div class="btn-toolbar">
                     <b>Aggregate</b>
                         <div class="btn-group">
-                        <a class="btn btn-primary">Type</a>
-                        <a class="btn">Region</a>
-                        <a class="btn">Country</a>
+                        <a onclick="goto(this,-711241968)" class="btn btn-primary">Type</a>
+                        <a onclick="goto(this,-711241968)" class="btn">Region</a>
+                        <a onclick="goto(this,-711241968)" class="btn">Country</a>
                         </div>
                     </div>
                     <div class="btn-toolbar">
@@ -45,7 +80,7 @@
                         <a class="btn">Country</a>
                         </div>
                     </div>
-                    <table class="table table-bordered">
+                    <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
                             <th>Type</th>
@@ -53,7 +88,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr facet="-711241968">
                             <td>A</td>
                             <td>France</td>
                             </tr>
@@ -62,5 +97,32 @@
                 </div>
             </div>
        </div>
+     <!--
+     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+     -->
+     <script src="js/jquery.min.js"></script>
+     <script type="text/javascript">
+          $(document).ready(function(){
+            goto(null,-711241968);
+            //showFirst();
+          });
+
+         function showFirst(){
+           $('.row-fluid').first().removeClass('hidden');
+         }
+         function goto(el,id){
+          var newel = $('#' + id);
+          if( newel.length > 0 ){
+           if( el ){
+             $(el).parents('.row-fluid').addClass('hidden');
+           }else{
+             $('.row-fluid').addClass('hidden');
+          }
+          newel.removeClass('hidden');
+          }else{
+            alert("Facet " + id + " not found.");
+          }
+         }
+     </script>
     </body>
 </html>
