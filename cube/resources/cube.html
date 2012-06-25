@@ -24,10 +24,13 @@
             .hidden {
               display: none;
             }
-            .table-hover tbody tr:hover td,
-            .table-hover tbody tr:hover th {
+            .table-hover tbody tr:hover td {
               background-color: #f9f9f9;
             }
+            tr.highlight td {
+              background-color: #B94A48;
+            }
+
         </style>
 
     </head>
@@ -54,11 +57,17 @@
                             <a class="dropdown-toggle btn">Country</a>
                         </div>
                     </div>
-                    <table class="table table-bordered ">
+                    <table class="table table-bordered table-hover">
                         <thead>
-                            <tr><th>Acct #</th><th>Balance</th><th>Commission</th></tr>
+                            <tr>
+                                <th>Acct #</th><th>Balance</th><th>Commission</th>
+                            </tr>
                         </thead>
-                        <tbody><tr><td>10</td><td>45428</td><td>50.36</td></tr></tbody>
+                        <tbody>
+                            <tr facet="-1123982626">
+                                <td>10</td><td>45428</td><td>50.36</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -96,6 +105,42 @@
                     </table>
                 </div>
             </div>
+            <div class="row-fluid hidden" id="-1123982626">
+                <div class="span*">
+                    <div class="btn-toolbar">
+                        <b>Aggregate</b>
+                        <div class="btn-group">
+                            <a class="btn" onclick="goto(this,'1552938692')">Type</a>
+                            <a class="btn" onclick="goto(this,'-1697967607')">Region</a>
+                            <a class="btn" onclick="goto(this,'2044851759')">Country</a></div>
+                    </div>
+                    <div class="btn-toolbar">
+                        <b>Filter</b>
+                        <div class="btn-group">Coming...</div>
+                    </div>
+                    <table class="table table-bordered ">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Region</th>
+                                <th>Country</th>
+                                <th>Acct</th>
+                                <th>Balance</th>
+                                <th>Commission</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr facet="">
+                                <td>C</td>
+                                <td>Asia</td>
+                                <td>China</td>
+                                <td>A7</td>
+                                <td>4566</td>
+                                <td>3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
        </div>
      <!--
      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -105,6 +150,13 @@
           $(document).ready(function(){
             goto(null,-711241968);
             //showFirst();
+            $('tr[facet]').click(function(){
+               var id = $(this).attr('facet');
+               if( id ){
+                 $("#" + id).toggleClass('hidden');
+                 $(this).toggleClass('highlight');
+               }
+            });
           });
 
          function showFirst(){

@@ -100,6 +100,9 @@
       ["Acct #" "Balance" "Commission"]])
     (map kw->title fields)))
 
+(defn agg-query? [q]
+  (boolean (:aggregate q)))
+
 (defn execute [query data]
   (let [[outvars preds] (to-cascalog query)
         preds (vec (cons (data->generator data) preds))
@@ -117,50 +120,34 @@
                (fnil (if (agg (:aggregate q)) disj conj) #{})
                agg))
 
-(defn possible-values1 [q agg]
-  (to-seq (agg q (agg-values (agg (:aggregate q))))))
-
-(defn aggregate-values [data]
-  (reduce (fn [a r]
-            (reduce #(update-in %1 [%2] conj (%2 r)) a aggregates))
-          (into {} (map vector aggregates (repeat #{})))
-          data))
-
-(defn possible-values
-  "Returns function giving the possible values of a aggregate
-  if query provided restrict to it :
-     values inside filter if existing
-     or only for aggregate"
-  [data]
-  (let [all-values
-        (if data
-          (aggregate-values data)
-          agg-values)]
-    (fn [agg & [q]]
-      (let [vls (seq
-        (if q
-          (agg (:filter q)
-               (if (or (not (:aggregate q))  ;;agreggate
-                       (-> q :aggregate agg)) ;;
-                 (all-values agg)))
-          (all-values agg)))]
-        (if vls vls [nil])))))
+(defn details-query
+  "returns query corresponding to row of an aggregate query"
+  [row query]
+  (if-let [agg (:aggregate query)]
+     {:filter
+      (cond (seq agg) (zipmap (filter agg aggregates) row)
+            (nil? agg) (zipmap aggregates row)
+            :else nil)}))
 
 (defn filter-values
   "Returns a map : combination of aggregates => all values as a map found in data
-For eaxmple [:type] => #{ {:type \"A\"} {:type \"B\"} }
+For example [:type] => #{ {:type \"A\"} {:type \"B\"} }
 "
   [data]
   (let [ks (conj (distinct (for [a aggregates b aggregates]
                              (filterv (into #{} [a b]) aggregates)))
                  aggregates)
         init-map (reduce (fn [m k] (assoc m k #{})) {} ks)]
-    (reduce (fn [m r]
-              (reduce (fn [m1 k] (update-in m1 [k] conj (select-keys r k)))
-                      m ks))
-            init-map
-            data)))
+    (->>
+     (reduce (fn [m r]
+               (reduce (fn [m1 k] (update-in m1 [k] conj (select-keys r k)))
+                       m ks))
+             init-map
+             data)
+     (remove #(nil? (seq (second %))))
+     (into {}))))
 
+;;TODO remove empty query if any
 (defn next-queries
   "returns all queries reachable with one step
 remove , add , change 1 parameter of the query
@@ -183,6 +170,16 @@ remove , add , change 1 parameter of the query
            (map #(assoc {} :filter %) (agg-values (filterv agg aggregates)))
            {}))))))
 
+(defn agg-queries
+  "Get all aggregate queries possible given a data set "
+  [data]
+  (map #(assoc {} :aggregate (set %)) (cons nil (keys (filter-values data)))))
+
+(defn filter-queries
+  "Get all possible filter queries givent a data set"
+  [data]
+  (map #(assoc {} :filter %) (mapcat second (filter-values data))))
+
 (defn all-queries [data & queries]
   (loop [facets #{}
          queries (if (seq queries)
@@ -196,6 +193,12 @@ remove , add , change 1 parameter of the query
      (if (or (= size (count facets)) (> (count facets) 200))
        facets
        (recur facets queries (count facets))))))
+
+
+;;TODO refactor : optimize code
+(defn load-facets
+  [data]
+  (map #(execute % data) (concat (agg-queries data) (filter-queries data))))
 
 #_(defn load-facets [data & queries]
   (loop [facets {} queries (if (seq queries) (into #{} queries) #{{:aggregate #{}}})]
