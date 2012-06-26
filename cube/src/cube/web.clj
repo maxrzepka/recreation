@@ -46,7 +46,9 @@
 (h/defsnippet facet-html "cube.html" [:#content [:div.row-fluid (h/nth-of-type 1)]]
   [{header :header rows :rows query :query}]
   [h/root] (h/set-attr :id (.hashCode query))
-  ;;Aggregate buttons
+  [:div.btn-toolbar]
+  (if (agg-query? query) identity (h/substitute ""))
+  ;;Aggregate buttons only for aggregate views
   [[:div.btn-toolbar h/first-child] :div.btn-group]
   (h/content (map #(agg-model  {:title (kw->title %)
                                 :active (-> query :aggregate %)
@@ -62,7 +64,7 @@
   ;;with closure
   ;;[:table] #(if (agg-query? query) ((h/add-class "selectable") %) (identity %))
   ;;with plain code
-  [:table] (if (agg-query? query) (h/add-class "table-hover") identity)
+  [:table] ((if (agg-query? query) h/add-class h/remove-class) "table-hover")
   [:table :thead :tr]
   (h/content (map #(th-model {:title %}) (flatten header)))
   [:table :tbody]
@@ -73,5 +75,5 @@
   [:#content] (h/content (map facet-html facets)))
 
 (defn export [file dataset]
-  ((spit file
-         )))
+  (spit file
+         (apply str (main (dorun (load-facets dataset))))))

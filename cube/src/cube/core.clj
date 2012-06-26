@@ -20,7 +20,9 @@
     :region (distinct (vals countries))
     nil))
 
-(defn generate-dataset [size]
+(defn generate-dataset
+  "Generate dataset based on types , countries"
+  [size]
  (map (fn [i]
            ((fn [m] (assoc m :region (countries (:country m))))
             {:type (get types (rand-int (count types)))
@@ -53,7 +55,7 @@
   (let [aggregate (:aggregate q)]
     (or (nil? aggregate) (set? aggregate))))
 
-(def fields [:type :region :country :acct :balance :commission])
+(def fields [:acct :type :region :country :balance :commission])
 
 (def aggregates [:type :region :country])
 
@@ -65,6 +67,15 @@
         rows (vec (map (apply juxt fields) data))]
     (list* rows (map #(str "?" (name %)) fields))))
 
+(defn query-orders [q]
+  (let [agg (:aggregate q)]
+    (when-let [sort (seq (map  keyword->casvar
+                           (if
+                             (seq agg) (filter agg aggregates)
+                              nil)))]
+       (vector (vec (concat [:sort] sort)))
+             )))
+
 (defn to-cascalog [query]
   (let [raw (vec (map keyword->casvar fields))
         sums ["?total" "?tbalance" "?tcommission"]
@@ -75,12 +86,13 @@
                           sums)
                   raw)
         filters (keep (fn [[k v]] (when v [#'= (keyword->casvar k) v])) (:filter query))
-        agg (when agg
+        aggregates (when agg
               [[co/!count "?acct" :> "?total"]
                [co/sum "?balance" :> "?tbalance"]
-               [co/sum "?commission" :> "?tcommission"]])]
-    (vector outvars (vec (filter (comp not nil?) (concat agg filters))))
-    ;;[outvars agg filters]
+               [co/sum "?commission" :> "?tcommission"]])
+        orders (query-orders query) ]
+    (vector outvars (vec (remove nil? (concat aggregates filters orders))))
+    ;;[outvars aggregates filters orders]
     ))
 
 
@@ -107,13 +119,10 @@
   (let [[outvars preds] (to-cascalog query)
         preds (vec (cons (data->generator data) preds))
         q (ca/construct outvars preds)]
-;;TODO rearranged result set : nested colls (hierarchy) when aggregate query
     {:header (q->header query)
      :query query
      :rows (first (ca/??- q))}))
 
-;;TODO How to distinguish full aggregation #{} and no aggregation nil
-;; ?? contraint {:post [(set? (:aggregate q)]}
 (defn toggle-aggregate [q agg]
   {:post [(valid-query? %)]}
   (update-in q [:aggregate]
@@ -178,7 +187,7 @@ remove , add , change 1 parameter of the query
 (defn filter-queries
   "Get all possible filter queries givent a data set"
   [data]
-  (map #(assoc {} :filter %) (mapcat second (filter-values data))))
+  (map #(assoc {} :filter %) (cons nil (mapcat second (filter-values data)))))
 
 (defn all-queries [data & queries]
   (loop [facets #{}
